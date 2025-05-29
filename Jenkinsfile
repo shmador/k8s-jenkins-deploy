@@ -8,8 +8,8 @@ pipeline {
 
   environment {
     AWS_DEFAULT_REGION = 'il-central-1'
-    IMAGE_REPO        = '314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/k8-nginx'
-    IMAGE_TAG         = 'latest'
+    IMAGE_REPO         = '314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/k8-nginx'
+    IMAGE_TAG          = 'latest'
   }
 
   stages {
@@ -21,8 +21,10 @@ pipeline {
 
     stage('Login to ECR') {
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-imtech']]) {
-          container('aws') {
+        // Run AWS login in the aws container
+        container('aws') {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: 'aws-imtech']]) {
             sh '''
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
                 | docker login --username AWS --password-stdin $IMAGE_REPO
@@ -34,6 +36,7 @@ pipeline {
 
     stage('Build & Push Image') {
       steps {
+        // Build & push in the docker:dind container
         container('docker') {
           sh '''
             docker build -t $IMAGE_REPO:$IMAGE_TAG .
@@ -45,12 +48,12 @@ pipeline {
 
     stage('Helm Deploy') {
       steps {
+        // Helm install in the helm container
         container('helm') {
           sh '''
             helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
             helm upgrade --install my-nginx bitnami/nginx \
               --namespace dor \
-              --create-namespace \
               --set image.repository=$IMAGE_REPO \
               --set image.tag=$IMAGE_TAG
           '''
