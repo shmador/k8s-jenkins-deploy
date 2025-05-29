@@ -21,7 +21,7 @@ pipeline {
 
     stage('Login to ECR') {
       steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-imtech']]) {
           container('jnlp') {
             sh '''
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
