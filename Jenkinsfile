@@ -37,7 +37,7 @@ podTemplate(
     stage('Build & Push Docker Image') {
       withCredentials([[
         $class: 'AmazonWebServicesCredentialsBinding',
-        credentialsId: 'aws-creds'
+        credentialsId: 'aws-imtech'
       ]]) {
         // Run AWS login in the aws container
         container('aws') {
