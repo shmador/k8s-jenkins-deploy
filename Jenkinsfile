@@ -28,7 +28,7 @@ pipeline {
           ]]) {
             sh '''
               # start Docker daemon in background
-              dockerd-entrypoint.sh & sleep 10
+              dockerd --host=unix:///var/run/docker.sock & sleep 10
 
               # login to ECR
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
