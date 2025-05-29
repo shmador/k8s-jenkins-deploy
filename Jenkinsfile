@@ -22,12 +22,10 @@ pipeline {
     stage('Login to ECR') {
       steps {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-imtech']]) {
-          container('jnlp') {
+          container('aws') {
             sh '''
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
-                | docker login \
-                  --username AWS \
-                  --password-stdin $IMAGE_REPO
+                | docker login --username AWS --password-stdin $IMAGE_REPO
             '''
           }
         }
@@ -36,7 +34,7 @@ pipeline {
 
     stage('Build & Push Image') {
       steps {
-        container('jnlp') {
+        container('docker') {
           sh '''
             docker build -t $IMAGE_REPO:$IMAGE_TAG .
             docker push $IMAGE_REPO:$IMAGE_TAG
@@ -47,7 +45,7 @@ pipeline {
 
     stage('Helm Deploy') {
       steps {
-        container('jnlp') {
+        container('helm') {
           sh '''
             helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
             helm upgrade --install my-nginx bitnami/nginx \
