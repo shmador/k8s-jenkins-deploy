@@ -3,6 +3,28 @@ pipeline {
     kubernetes {
       inheritFrom 'k8s-agent'
       defaultContainer 'jnlp'
+      containers: [
+        containerTemplate(
+          name: 'jnlp',
+          image: 'jenkins/inbound-agent:latest',
+          args: '${computer.jnlpmac} ${computer.name}'
+        ),
+        containerTemplate(
+          name: 'docker',
+          image: 'docker:dind',
+          privileged: true
+        ),
+        containerTemplate(
+          name: 'helm',
+          image: 'dtzar/helm-kubectl:3.18.0',
+          command: 'sleep',
+          args: '999999'
+        )
+      ]
+      volumes: [
+        emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume'),
+        emptyDirVolume(mountPath: '/var/lib/docker',   name: 'docker-graph-storage')
+      ]
     }
   }
 
@@ -19,36 +41,33 @@ pipeline {
       }
     }
 
-    stage('Login to ECR') {
+    stage('Build & Push Docker Image') {
       steps {
-        // Run AWS login in the aws container
-        container('aws') {
-          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                            credentialsId: 'aws-imtech']]) {
+        container('docker') {
+          withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-creds'
+          ]]) {
             sh '''
+              # install AWS CLI
+              apk add --no-cache python3 py3-pip
+              pip3 install awscli
+
+              # default ECR login
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
                 | docker login --username AWS --password-stdin $IMAGE_REPO
+
+              # build & push
+              docker build -t $IMAGE_REPO:$IMAGE_TAG .
+              docker push $IMAGE_REPO:$IMAGE_TAG
             '''
           }
         }
       }
     }
 
-    stage('Build & Push Image') {
+    stage('Deploy with Helm') {
       steps {
-        // Build & push in the docker:dind container
-        container('docker') {
-          sh '''
-            docker build -t $IMAGE_REPO:$IMAGE_TAG .
-            docker push $IMAGE_REPO:$IMAGE_TAG
-          '''
-        }
-      }
-    }
-
-    stage('Helm Deploy') {
-      steps {
-        // Helm install in the helm container
         container('helm') {
           sh '''
             helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
