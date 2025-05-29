@@ -14,9 +14,7 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Build & Push Docker Image') {
@@ -27,14 +25,16 @@ pipeline {
             credentialsId: 'aws-imtech'
           ]]) {
             sh '''
-              # start Docker daemon in background
+              # mount cgroups
+              sudo mount -t cgroup2 none /sys/fs/cgroup || true
+
+              # start Docker daemon
               dockerd --host=unix:///var/run/docker.sock & sleep 10
 
-              # login to ECR
+              # login, build, push
               aws ecr get-login-password --region $AWS_DEFAULT_REGION \
                 | docker login --username AWS --password-stdin $IMAGE_REPO
 
-              # build & push
               docker build -t $IMAGE_REPO:$IMAGE_TAG .
               docker push $IMAGE_REPO:$IMAGE_TAG
             '''
