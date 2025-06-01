@@ -17,6 +17,8 @@ spec:
     env:
       - name: DOCKER_TLS_CERTDIR
         value: ""
+    command:
+      - dockerd-entrypoint.sh
     args:
       - --host=tcp://0.0.0.0:2375
       - --storage-driver=overlay2
