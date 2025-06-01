@@ -17,8 +17,7 @@ spec:
     env:
       - name: DOCKER_TLS_CERTDIR
         value: ""
-    command:
-      - dockerd-entrypoint.sh
+    # Do NOT override 'command'; just pass these args so the built-in entrypoint runs docker with TCP:
     args:
       - --host=tcp://0.0.0.0:2375
       - --storage-driver=overlay2
