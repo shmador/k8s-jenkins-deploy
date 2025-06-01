@@ -18,6 +18,7 @@ spec:
       - name: DOCKER_TLS_CERTDIR
         value: ""
     args:
+      - --host=tcp://0.0.0.0:2375
       - --storage-driver=overlay2
 
   - name: docker
