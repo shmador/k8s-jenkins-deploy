@@ -14,6 +14,9 @@ spec:
     image: docker:20.10-dind
     securityContext:
       privileged: true
+    env:
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
     args:
       - --storage-driver=overlay2
 
