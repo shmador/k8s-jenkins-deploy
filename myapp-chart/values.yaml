@@ -13,6 +13,11 @@ image:
   pullPolicy: IfNotPresent
   pullSecrets: []    # e.g. [{ name: "ecr-creds" }]
 
+# ServiceAccount configuration
+serviceAccount:
+  create: true      # Set to false if you already have an existing SA
+  name: ""          # If create=true, helm will generate a name. To use a specific existing SA, set create=false and name=<sa-name>
+
 # The port your container listens on
 containerPort: 80
 
