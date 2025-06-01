@@ -15,9 +15,17 @@ spec:
       labels:
         app: {{ include "myapp.name" . }}
     spec:
+      {{-- If you’ve defined image.pullSecrets in values (e.g. ecr-creds), mount it here --}}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.image.pullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: nginx
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.containerPort }}
           resources:
@@ -42,6 +50,7 @@ spec:
             periodSeconds: {{ .Values.liveness.periodSeconds }}
             failureThreshold: {{ .Values.liveness.failureThreshold }}
           env:
+            {{- if .Values.secret.name }}
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -52,11 +61,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.name }}
                   key: {{ .Values.secret.passwordKey }}
+            {{- end }}
           volumeMounts:
             - name: html-storage
               mountPath: /usr/share/nginx/html
       volumes:
         - name: html-storage
+          {{- if .Values.pvcName }}
           persistentVolumeClaim:
             claimName: {{ .Values.pvcName }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
 

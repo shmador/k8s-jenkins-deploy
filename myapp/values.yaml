@@ -1,66 +1,57 @@
-# Default namespace if not overridden at install time
-namespace: dev
+# Default values for myapp.
+
+# Namespace to deploy into
+namespace: default
 
 # Number of replicas
-replicaCount: 3
+replicaCount: 1
 
-# Image settings
+# Container image settings (left empty here—override from CI)
 image:
-  repository: nginx
-  tag: latest
+  repository: ""     # e.g. "314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp"
+  tag:        ""     # e.g. "12"
+  pullPolicy: IfNotPresent
+  pullSecrets: []    # e.g. [{ name: "ecr-creds" }]
 
-# Container port
+# The port your container listens on
 containerPort: 80
 
 # Resource requests & limits
 resources:
   requests:
-    cpu: "100m"
+    cpu:    "100m"
     memory: "128Mi"
   limits:
-    cpu: "500m"
+    cpu:    "200m"
     memory: "256Mi"
 
-# Probes
+# Readiness probe settings
 readiness:
   path: "/"
   initialDelaySeconds: 5
-  periodSeconds: 10
+  periodSeconds: 5
   failureThreshold: 3
 
+# Liveness probe settings
 liveness:
   path: "/"
   initialDelaySeconds: 15
-  periodSeconds: 20
+  periodSeconds: 10
   failureThreshold: 3
 
-# Secret reference for DB credentials
+# Optional DB secret (leave blank for now)
 secret:
-  name: my-secret
-  usernameKey: username
-  passwordKey: password
+  name: ""            # leave empty if not using a Secret
+  usernameKey: ""     # e.g. "username" inside that Secret
+  passwordKey: ""     # e.g. "password" inside that Secret
 
-# PVC to mount
-pvcName: nginx-pvc
+# PVC to back /usr/share/nginx/html (leave empty to use emptyDir)
+pvcName: ""
 
-service:
-  type: ClusterIP
-  port: 8081
-
-# ServiceAccount settings
-serviceAccount:
-  # Whether to create a ServiceAccount resource
-  create: true
-
-  # If you want to specify a custom name, put it here.
-  # If left blank, will use the chart fullname.
-  name: ""
-
-ingress:
-  enabled: false      # set to true if you actually want an Ingress created
-
-service:
-  type: NodePort     # expose on every node’s IP
-  port: 8081         # inside-cluster port
-  nodePort: 30081    # external port on each node
+# If pvcName is empty, chart will create an emptyDir instead of a PVC.
+# If you do want Helm to create a PVC for you, set a storage size & accessModes:
+storage:
+  size: "1Gi"
+  accessModes:
+    - ReadWriteOnce
 

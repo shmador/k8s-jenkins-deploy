@@ -100,21 +100,16 @@ spec:
       steps {
         container('helm') {
           sh """
-            helm repo add bitnami https://charts.bitnami.com/bitnami
+            helm repo add myapp ./myapp-chart
             helm repo update
 
-            helm upgrade --install my-nginx bitnami/nginx \
+            helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
-              --set image.registry=${ECR_REGISTRY} \
-              --set image.repository=${ECR_REPO} \
+              --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
               --set image.tag=${IMAGE_TAG} \
-              --set image.pullPolicy=Always \
-              --set global.security.allowInsecureImages=true \
-              --set image.pullSecrets[0].name=ecr-creds \
-              --set architecture=standalone \
-              --set persistence.enabled=false
+              --set image.pullSecrets[0].name=ecr-creds
           """
-        }
+       }
       }
     }
   }
