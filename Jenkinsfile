@@ -9,6 +9,7 @@ metadata:
   labels:
     app: jenkins-agent
 spec:
+  serviceAccountName: jenkins
   containers:
   - name: dind
     image: docker:20.10-dind
@@ -80,7 +81,6 @@ spec:
     stage('Build & Push Docker Image') {
       steps {
         container('docker') {
-          // wait for dockerd to be ready before running docker commands
           sh '''
             echo "=> Waiting for Docker daemon..."
             until docker info > /dev/null 2>&1; do
