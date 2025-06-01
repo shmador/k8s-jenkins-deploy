@@ -100,9 +100,6 @@ spec:
       steps {
         container('helm') {
           sh """
-            helm repo add myapp ./myapp-chart
-            helm repo update
-
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
               --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
