@@ -110,7 +110,9 @@ spec:
               --set image.tag=${IMAGE_TAG} \
               --set image.pullPolicy=Always \
               --set global.security.allowInsecureImages=true \
-              --set image.pullSecrets[0].name=ecr-creds
+              --set image.pullSecrets[0].name=ecr-creds \
+              --set architecture=standalone \
+              --set persistence.enabled=false
           """
         }
       }
