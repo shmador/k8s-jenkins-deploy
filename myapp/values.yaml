@@ -1,0 +1,66 @@
+# Default namespace if not overridden at install time
+namespace: dev
+
+# Number of replicas
+replicaCount: 3
+
+# Image settings
+image:
+  repository: nginx
+  tag: latest
+
+# Container port
+containerPort: 80
+
+# Resource requests & limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# Probes
+readiness:
+  path: "/"
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+
+liveness:
+  path: "/"
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  failureThreshold: 3
+
+# Secret reference for DB credentials
+secret:
+  name: my-secret
+  usernameKey: username
+  passwordKey: password
+
+# PVC to mount
+pvcName: nginx-pvc
+
+service:
+  type: ClusterIP
+  port: 8081
+
+# ServiceAccount settings
+serviceAccount:
+  # Whether to create a ServiceAccount resource
+  create: true
+
+  # If you want to specify a custom name, put it here.
+  # If left blank, will use the chart fullname.
+  name: ""
+
+ingress:
+  enabled: false      # set to true if you actually want an Ingress created
+
+service:
+  type: NodePort     # expose on every node’s IP
+  port: 8081         # inside-cluster port
+  nodePort: 30081    # external port on each node
+
