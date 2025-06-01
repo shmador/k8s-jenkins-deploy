@@ -42,9 +42,10 @@ spec:
   }
 
   environment {
-    AWS_REGION = 'il-central-1'
-    ECR_URI    = '314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp'
-    IMAGE_TAG  = "${env.BUILD_NUMBER}"
+    AWS_REGION   = 'il-central-1'
+    ECR_REGISTRY = '314525640319.dkr.ecr.il-central-1.amazonaws.com'
+    ECR_REPO     = 'dor/helm/myapp'
+    IMAGE_TAG    = "${env.BUILD_NUMBER}"
   }
 
   stages {
@@ -76,9 +77,9 @@ spec:
       steps {
         container('docker') {
           sh """
-            echo "${ECR_PASSWORD}" | docker login -u AWS --password-stdin ${ECR_URI}
-            docker build -t ${ECR_URI}:${IMAGE_TAG} .
-            docker push ${ECR_URI}:${IMAGE_TAG}
+            echo "${ECR_PASSWORD}" | docker login -u AWS --password-stdin ${ECR_REGISTRY}
+            docker build -t ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} .
+            docker push ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
           """
         }
       }
@@ -93,8 +94,8 @@ spec:
 
             helm upgrade --install my-nginx bitnami/nginx \
               --namespace default \
-              --set image.registry=${ECR_URI%%/*} \
-              --set image.repository=${ECR_URI#*/} \
+              --set image.registry=${ECR_REGISTRY} \
+              --set image.repository=${ECR_REPO} \
               --set image.tag=${IMAGE_TAG} \
               --set image.pullPolicy=Always
           """
