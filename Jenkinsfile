@@ -109,7 +109,8 @@ spec:
               --set image.repository=${ECR_REPO} \
               --set image.tag=${IMAGE_TAG} \
               --set image.pullPolicy=Always \
-              --set global.security.allowInsecureImages=true
+              --set global.security.allowInsecureImages=true \
+              --set image.pullSecrets[0].name=ecr-creds
           """
         }
       }
