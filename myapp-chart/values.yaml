@@ -6,7 +6,7 @@ namespace: default
 # Number of replicas
 replicaCount: 1
 
-# Container image settings (left empty here—override from CI)
+# Container image settings (override from CI)
 image:
   repository: ""     # e.g. "314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp"
   tag:        ""     # e.g. "12"
@@ -15,6 +15,10 @@ image:
 
 # The port your container listens on
 containerPort: 80
+
+# Service configuration (needed for Helm test template)
+service:
+  port: 80
 
 # Resource requests & limits
 resources:
@@ -48,8 +52,7 @@ secret:
 # PVC to back /usr/share/nginx/html (leave empty to use emptyDir)
 pvcName: ""
 
-# If pvcName is empty, chart will create an emptyDir instead of a PVC.
-# If you do want Helm to create a PVC for you, set a storage size & accessModes:
+# If pvcName is empty, chart will use emptyDir; otherwise it expects an existing PVC.
 storage:
   size: "1Gi"
   accessModes:
