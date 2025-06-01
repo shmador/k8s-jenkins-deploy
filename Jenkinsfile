@@ -17,7 +17,6 @@ spec:
     env:
       - name: DOCKER_TLS_CERTDIR
         value: ""
-    # Do NOT override 'command'; just pass these args so the built-in entrypoint runs docker with TCP:
     args:
       - --host=tcp://0.0.0.0:2375
       - --storage-driver=overlay2
@@ -81,11 +80,18 @@ spec:
     stage('Build & Push Docker Image') {
       steps {
         container('docker') {
-          sh """
+          // wait for dockerd to be ready before running docker commands
+          sh '''
+            echo "=> Waiting for Docker daemon..."
+            until docker info > /dev/null 2>&1; do
+              sleep 1
+            done
+            echo "=> Docker is up! Logging in and building..."
+
             echo "${ECR_PASSWORD}" | docker login -u AWS --password-stdin ${ECR_REGISTRY}
             docker build -t ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} .
             docker push ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
-          """
+          '''
         }
       }
     }
