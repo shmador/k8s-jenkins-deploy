@@ -51,7 +51,6 @@ spec:
     ECR_REGISTRY = '314525640319.dkr.ecr.il-central-1.amazonaws.com'
     ECR_REPO     = 'dor/helm/myapp'
     IMAGE_TAG    = "${env.BUILD_NUMBER}"
-    KUBECONFIG   = "${env.WORKSPACE}/.kube/config"
   }
 
   stages {
@@ -61,7 +60,7 @@ spec:
       }
     }
 
-    stage('Get ECR Password') {
+    stage('Authenticate to ECR') {
       steps {
         container('aws-cli') {
           withCredentials([[
@@ -70,7 +69,7 @@ spec:
           ]]) {
             script {
               env.ECR_PASSWORD = sh(
-                script: "aws ecr get-login-password --region ${AWS_REGION}",
+                script: "aws --region ${AWS_REGION} ecr get-login-password",
                 returnStdout: true
               ).trim()
             }
@@ -84,7 +83,10 @@ spec:
         container('docker') {
           sh '''
             echo "=> Waiting for Docker daemon..."
-            until docker info > /dev/null 2>&1; do sleep 1; done
+            until docker info > /dev/null 2>&1; do
+              sleep 1
+            done
+            echo "=> Docker is up! Logging in and building..."
 
             echo "${ECR_PASSWORD}" | docker login -u AWS --password-stdin ${ECR_REGISTRY}
             docker build -t ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} .
@@ -94,49 +96,17 @@ spec:
       }
     }
 
-    stage('Configure Kubeconfig for EKS') {
+    stage('Deploy with Helm') {
       steps {
-        container('aws-cli') {
-          withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'imtech'
-          ]]) {
-            sh '''
-              mkdir -p "$(dirname "$KUBECONFIG")"
-              aws eks update-kubeconfig --name imtech01 --region ${AWS_REGION} --kubeconfig "$KUBECONFIG"
-            '''
-          }
-        }
-      }
-    }
-
-    stage('Deploy with Helm to EKS') {
-      steps {
-         container('aws-cli') {
-          sh '''
-            # Install tar & curl on Amazon Linux
-            yum install -y tar gzip curl
-    
-            # download and install Helm client
-            HELM_VER="v3.10.0"
-            curl -sL https://get.helm.sh/helm-${HELM_VER}-linux-amd64.tar.gz \
-              | tar xz --strip-components=1 linux-amd64/helm -C /usr/local/bin
-    
-            # sanity check
-            aws --version
-            tar --version
-            helm version
-    
-            # deploy to EKS
+        container('helm') {
+          sh """
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
-              --kubeconfig "${KUBECONFIG}" \
-              --set image.repository=${ECR_REGISTRY}/${ECR_REPO} \
+              --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
               --set image.tag=${IMAGE_TAG} \
-              --set image.pullSecrets[0].name=ecr-creds \
-              --wait --timeout 5m
-          '''
-        }
+              --set image.pullSecrets[0].name=ecr-creds
+          """
+       }
       }
     }
   }
