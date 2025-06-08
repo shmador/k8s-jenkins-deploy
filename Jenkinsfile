@@ -1,7 +1,7 @@
 pipeline {
   agent {
     kubernetes {
-      cloud 'dor-local'
+      cloud 'imtech-eks'
       yaml """
 apiVersion: v1
 kind: Pod
