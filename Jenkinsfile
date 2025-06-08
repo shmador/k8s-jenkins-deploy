@@ -112,21 +112,25 @@ spec:
 
     stage('Deploy with Helm to EKS') {
       steps {
-        container('aws-cli') {
+     container('aws-cli') {
           sh '''
-            # install helm binary
+            # Install tar & curl in this Alpine-based image
+            apk add --no-cache tar curl
+    
+            # install helm client
             HELM_VER="v3.10.0"
             curl -sL https://get.helm.sh/helm-${HELM_VER}-linux-amd64.tar.gz \
               | tar xz --strip-components=1 linux-amd64/helm -C /usr/local/bin
     
-            # verify we have aws + helm
+            # verify we have aws, tar, curl, helm
             aws --version
+            tar --version
             helm version
     
-            # deploy against the EKS kubeconfig
+            # now deploy
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
-              --kubeconfig ${KUBECONFIG} \
+              --kubeconfig "${KUBECONFIG}" \
               --set image.repository=${ECR_REGISTRY}/${ECR_REPO} \
               --set image.tag=${IMAGE_TAG} \
               --set image.pullSecrets[0].name=ecr-creds \
