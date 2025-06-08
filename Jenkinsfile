@@ -112,8 +112,18 @@ spec:
 
     stage('Deploy with Helm to EKS') {
       steps {
-        container('helm') {
-          sh """
+        container('aws-cli') {
+          sh '''
+            # install helm binary
+            HELM_VER="v3.10.0"
+            curl -sL https://get.helm.sh/helm-${HELM_VER}-linux-amd64.tar.gz \
+              | tar xz --strip-components=1 linux-amd64/helm -C /usr/local/bin
+    
+            # verify we have aws + helm
+            aws --version
+            helm version
+    
+            # deploy against the EKS kubeconfig
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
               --kubeconfig ${KUBECONFIG} \
@@ -121,7 +131,7 @@ spec:
               --set image.tag=${IMAGE_TAG} \
               --set image.pullSecrets[0].name=ecr-creds \
               --wait --timeout 5m
-          """
+          '''
         }
       }
     }
