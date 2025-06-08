@@ -1,7 +1,7 @@
 # Default values for myapp.
 
 # Namespace to deploy into
-namespace: default
+namespace: dor
 
 # Number of replicas
 replicaCount: 1
