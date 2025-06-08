@@ -51,6 +51,7 @@ spec:
     ECR_REGISTRY = '314525640319.dkr.ecr.il-central-1.amazonaws.com'
     ECR_REPO     = 'dor/helm/myapp'
     IMAGE_TAG    = "${env.BUILD_NUMBER}"
+    KUBECONFIG   = "${HOME}/.kube/config
   }
 
   stages {
@@ -67,19 +68,9 @@ spec:
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'imtech'
           ]]) {
-            sh '''
-              # point KUBECONFIG under this workspace so it’s never empty
-              export KUBECONFIG="$WORKSPACE/.kube/config"
-    
-              # create parent directory if needed
-              mkdir -p "$(dirname "$KUBECONFIG")"
-    
-              # generate a kubeconfig for your EKS cluster
-              aws eks update-kubeconfig \
-                --name imtech01 \
-                --region "$AWS_REGION" \
-                --kubeconfig "$KUBECONFIG"
-            '''
+            sh """
+              aws eks update-kubeconfig --name imtech01 --region ${AWS_REGION}
+            """
             script {
               env.ECR_PASSWORD = sh(
                 script: "aws --region ${AWS_REGION} ecr get-login-password",
@@ -113,7 +104,6 @@ spec:
       steps {
         container('helm') {
           sh """
-            export KUBECONFIG=\${KUBECONFIG}
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
               --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
