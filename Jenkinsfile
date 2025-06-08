@@ -15,6 +15,13 @@ spec:
     image: docker:20.10-dind
     securityContext:
       privileged: true
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
     env:
       - name: DOCKER_TLS_CERTDIR
         value: ""
@@ -27,21 +34,30 @@ spec:
     command:
       - cat
     tty: true
-    env:
-      - name: DOCKER_HOST
-        value: tcp://localhost:2375
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
 
   - name: aws-cli
     image: amazon/aws-cli:2.11.0
     command:
       - cat
     tty: true
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
 
   - name: helm
     image: alpine/helm:3.10.0
     command:
       - cat
     tty: true
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
 """
     }
   }
