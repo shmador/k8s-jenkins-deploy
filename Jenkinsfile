@@ -68,7 +68,11 @@ spec:
             credentialsId: 'imtech'
           ]]) {
             sh """
-              aws eks update-kubeconfig --name imtech01 --region il-central-1
+              mkdir -p \$(dirname \$KUBECONFIG)
+              aws eks update-kubeconfig \\
+                --name imtech01 \\
+                --region ${AWS_REGION} \\
+                --kubeconfig \$KUBECONFIG
             """
             script {
               env.ECR_PASSWORD = sh(
@@ -103,6 +107,7 @@ spec:
       steps {
         container('helm') {
           sh """
+            export KUBECONFIG=\${KUBECONFIG}
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
               --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
