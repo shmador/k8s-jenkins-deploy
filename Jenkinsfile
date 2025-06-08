@@ -2,7 +2,8 @@ pipeline {
   agent {
     kubernetes {
       cloud 'imtech-eks'
-      namespace 'dor' 
+      namespace 'dor'
+      idleMinutes 0
       yaml """
 apiVersion: v1
 kind: Pod
@@ -124,12 +125,6 @@ spec:
           """
        }
       }
-    }
-  }
-
-  post {
-    always {
-      cleanWs()
     }
   }
 }
