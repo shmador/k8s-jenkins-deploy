@@ -51,7 +51,7 @@ spec:
     ECR_REGISTRY = '314525640319.dkr.ecr.il-central-1.amazonaws.com'
     ECR_REPO     = 'dor/helm/myapp'
     IMAGE_TAG    = "${env.BUILD_NUMBER}"
-    KUBECONFIG   = "${HOME}/.kube/config"
+    KUBECONFIG   = "${env.WORKSPACE}/.kube/config"
   }
 
   stages {
@@ -106,6 +106,7 @@ spec:
           sh """
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
+              --kubeconfig ${WORKSPACE}/.kube/config \
               --set image.repository=314525640319.dkr.ecr.il-central-1.amazonaws.com/dor/helm/myapp \
               --set image.tag=${IMAGE_TAG} \
               --set image.pullSecrets[0].name=ecr-creds
