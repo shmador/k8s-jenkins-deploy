@@ -67,6 +67,12 @@ spec:
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'imtech'
           ]]) {
+            sh """
+                aws eks update-kubeconfig \\
+                --name imtech01 \\
+                --region ${AWS_REGION} \\
+                --kubeconfig \$KUBECONFIG
+            """
             script {
               env.ECR_PASSWORD = sh(
                 script: "aws --region ${AWS_REGION} ecr get-login-password",
