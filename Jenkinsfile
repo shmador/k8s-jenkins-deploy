@@ -51,7 +51,7 @@ spec:
     ECR_REGISTRY = '314525640319.dkr.ecr.il-central-1.amazonaws.com'
     ECR_REPO     = 'dor/helm/myapp'
     IMAGE_TAG    = "${env.BUILD_NUMBER}"
-    KUBECONFIG   = "${HOME}/.kube/config
+    KUBECONFIG   = "${HOME}/.kube/config"
   }
 
   stages {
