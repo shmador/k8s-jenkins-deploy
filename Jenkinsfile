@@ -67,13 +67,19 @@ spec:
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'imtech'
           ]]) {
-            sh """
-              mkdir -p \$(dirname \$KUBECONFIG)
-              aws eks update-kubeconfig \\
-                --name imtech01 \\
-                --region ${AWS_REGION} \\
-                --kubeconfig \$KUBECONFIG
-            """
+            sh '''
+              # point KUBECONFIG under this workspace so it’s never empty
+              export KUBECONFIG="$WORKSPACE/.kube/config"
+    
+              # create parent directory if needed
+              mkdir -p "$(dirname "$KUBECONFIG")"
+    
+              # generate a kubeconfig for your EKS cluster
+              aws eks update-kubeconfig \
+                --name imtech01 \
+                --region "$AWS_REGION" \
+                --kubeconfig "$KUBECONFIG"
+            '''
             script {
               env.ECR_PASSWORD = sh(
                 script: "aws --region ${AWS_REGION} ecr get-login-password",
