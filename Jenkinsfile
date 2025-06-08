@@ -112,22 +112,22 @@ spec:
 
     stage('Deploy with Helm to EKS') {
       steps {
-     container('aws-cli') {
+         container('aws-cli') {
           sh '''
-            # Install tar & curl in this Alpine-based image
-            apk add --no-cache tar curl
+            # Install tar & curl on Amazon Linux
+            yum install -y tar gzip curl
     
-            # install helm client
+            # download and install Helm client
             HELM_VER="v3.10.0"
             curl -sL https://get.helm.sh/helm-${HELM_VER}-linux-amd64.tar.gz \
               | tar xz --strip-components=1 linux-amd64/helm -C /usr/local/bin
     
-            # verify we have aws, tar, curl, helm
+            # sanity check
             aws --version
             tar --version
             helm version
     
-            # now deploy
+            # deploy to EKS
             helm upgrade --install my-nginx ./myapp-chart \
               --namespace default \
               --kubeconfig "${KUBECONFIG}" \
