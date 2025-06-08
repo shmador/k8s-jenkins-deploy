@@ -61,21 +61,19 @@ spec:
       }
     }
 
-    stage('Authenticate to ECR & Configure Kubeconfig') {
+    stage('Get ECR Password') {
       steps {
         container('aws-cli') {
           withCredentials([[
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'imtech'
           ]]) {
-            sh """
-              # configure kubeconfig for EKS
-              aws eks update-kubeconfig --name imtech01 --region ${AWS_REGION} --kubeconfig ${KUBECONFIG}
-
-              # authenticate to ECR
-              ECR_PASSWORD=\$(aws ecr get-login-password --region ${AWS_REGION})
-              echo "\$ECR_PASSWORD" | docker login -u AWS --password-stdin ${ECR_REGISTRY}
-            """
+            script {
+              env.ECR_PASSWORD = sh(
+                script: "aws ecr get-login-password --region ${AWS_REGION}",
+                returnStdout: true
+              ).trim()
+            }
           }
         }
       }
@@ -86,11 +84,9 @@ spec:
         container('docker') {
           sh '''
             echo "=> Waiting for Docker daemon..."
-            until docker info > /dev/null 2>&1; do
-              sleep 1
-            done
+            until docker info > /dev/null 2>&1; do sleep 1; done
 
-            echo "=> Building and pushing image..."
+            echo "${ECR_PASSWORD}" | docker login -u AWS --password-stdin ${ECR_REGISTRY}
             docker build -t ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} .
             docker push ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
           '''
@@ -98,28 +94,34 @@ spec:
       }
     }
 
+    stage('Configure Kubeconfig for EKS') {
+      steps {
+        container('aws-cli') {
+          withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'imtech'
+          ]]) {
+            sh '''
+              mkdir -p "$(dirname "$KUBECONFIG")"
+              aws eks update-kubeconfig --name imtech01 --region ${AWS_REGION} --kubeconfig "$KUBECONFIG"
+            '''
+          }
+        }
+      }
+    }
+
     stage('Deploy with Helm to EKS') {
       steps {
-        // use the aws-cli container to get both aws and helm
-        container('aws-cli') {
-          sh '''
-            # install helm client
-            HELM_VER="v3.10.0"
-            curl -sL https://get.helm.sh/helm-${HELM_VER}-linux-amd64.tar.gz \
-              | tar xz --strip-components=1 linux-amd64/helm -C /usr/local/bin
-
-            # verify
-            helm version
-
-            # deploy
-            helm upgrade --install my-nginx ./myapp-chart \\
-              --namespace default \\
-              --kubeconfig ${KUBECONFIG} \\
-              --set image.repository=${ECR_REGISTRY}/${ECR_REPO} \\
-              --set image.tag=${IMAGE_TAG} \\
-              --set image.pullSecrets[0].name=ecr-creds \\
+        container('helm') {
+          sh """
+            helm upgrade --install my-nginx ./myapp-chart \
+              --namespace default \
+              --kubeconfig ${KUBECONFIG} \
+              --set image.repository=${ECR_REGISTRY}/${ECR_REPO} \
+              --set image.tag=${IMAGE_TAG} \
+              --set image.pullSecrets[0].name=ecr-creds \
               --wait --timeout 5m
-          '''
+          """
         }
       }
     }
