@@ -68,10 +68,7 @@ spec:
             credentialsId: 'imtech'
           ]]) {
             sh """
-                aws eks update-kubeconfig \\
-                --name imtech01 \\
-                --region ${AWS_REGION} \\
-                --kubeconfig \$KUBECONFIG
+              aws eks update-kubeconfig --name imtech01 --region il-central-1
             """
             script {
               env.ECR_PASSWORD = sh(
