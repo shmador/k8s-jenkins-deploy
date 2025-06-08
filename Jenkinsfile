@@ -17,47 +17,46 @@ spec:
       privileged: true
     resources:
       requests:
-        cpu: "100m"
+        cpu: "50m"
         memory: "256Mi"
       limits:
-        cpu: "500m"
+        cpu: "250m"
         memory: "512Mi"
-    env:
-      - name: DOCKER_TLS_CERTDIR
-        value: ""
-    args:
-      - --host=tcp://0.0.0.0:2375
-      - --storage-driver=overlay2
 
   - name: docker
     image: docker:20.10
-    command:
-      - cat
+    command: [cat]
     tty: true
     resources:
       requests:
-        cpu: "50m"
+        cpu: "25m"
         memory: "128Mi"
 
   - name: aws-cli
     image: amazon/aws-cli:2.11.0
-    command:
-      - cat
+    command: [cat]
     tty: true
     resources:
       requests:
-        cpu: "50m"
+        cpu: "25m"
         memory: "128Mi"
 
   - name: helm
     image: alpine/helm:3.10.0
-    command:
-      - cat
+    command: [cat]
     tty: true
     resources:
       requests:
-        cpu: "50m"
+        cpu: "25m"
         memory: "128Mi"
+
+  # jnlp can stay at 100m if needed:
+  - name: jnlp
+    image: jenkins/inbound-agent:latest
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
 """
     }
   }
