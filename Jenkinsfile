@@ -2,6 +2,7 @@ pipeline {
   agent {
     kubernetes {
       cloud 'imtech-eks'
+      namespace 'dor' 
       yaml """
 apiVersion: v1
 kind: Pod
